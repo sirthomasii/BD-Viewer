@@ -1,0 +1,244 @@
+common: &common
+    QV:
+        src: "https://i.imgur.com/1JXeiYU.jpg"
+    QH:
+        src: "https://i.imgur.com/rse8MN6.jpg"
+    CX:
+        src: "https://i.imgur.com/AJVSECY.jpg"
+    Coll:
+        src: "https://i.imgur.com/9jZuBfA.jpg"
+    Chop:
+        src: "https://i.imgur.com/OsTAHm8.jpg"
+    DV:
+        src: "https://i.imgur.com/XtaJvjG.jpg"
+    AptM:
+        AptM:
+            src: "https://i.imgur.com/nb6TgRG.jpg"
+    BPM:
+        BPM:
+            src: "https://i.imgur.com/BlqNMhD.jpg"
+    WS:
+        WS:
+            src: "https://i.imgur.com/X7FpG5X.jpg"
+        FWS:
+            src: "https://i.imgur.com/X7FpG5X.jpg"
+    NPM:
+        IPM:
+            src: "https://i.imgur.com/L90HaqZ.jpg"
+        BIF:
+            src: "https://i.imgur.com/mOCLAws.jpg"
+    FC:
+        FC:
+            src: "https://i.imgur.com/6iJS7Ku.jpg"
+    Grd:
+        Grd:
+            src: "https://i.imgur.com/sRNAFSS.jpg"
+    SLIT:
+        src: "https://i.imgur.com/kGqn6S9.jpg"
+    Img:
+        Img:
+            src: "https://i.imgur.com/wDbD2F1.jpg"
+    BCM:
+        BCM:
+            src: "https://i.imgur.com/yYu1pPC.jpg"
+        FBCM:
+            src: "https://i.imgur.com/vMMTDR9.jpg"
+    LBM:
+        BSM:
+            src: "https://i.imgur.com/uKcAuL0.jpg"
+    EMU:
+        Slit & Grid:
+            src: "https://i.imgur.com/conggKa.jpg"
+        Alison Scanner:
+            src: "https://i.imgur.com/conggKa.jpg"
+    DPL:
+        src: "https://i.imgur.com/XNm5HUR.jpg"
+    BLM:
+        nBLM:
+            src: "https://i.imgur.com/yPK1UU8.jpg"
+        ICBLM:
+            src: "https://i.imgur.com/eykYmvU.jpg"
+    IBS:
+        IBS:
+            src: "https://i.imgur.com/eG18CgW.jpg"
+    Valve:
+        DN160:
+            src: "https://i.imgur.com/uktgg69.jpg"
+            id: "DN160 Valve"
+        DN100:
+            src: "https://i.imgur.com/uktgg69.jpg"
+            id: "DN100 Valve"
+        DN100F:
+            src: "https://i.imgur.com/uktgg69.jpg"
+            id: "DN100 Fast Valve"
+        DN200:
+            src: "https://i.imgur.com/uktgg69.jpg"
+            id: "DN200 Valve"
+        DN40:
+            src: "https://i.imgur.com/uktgg69.jpg"
+            id: "DN40 Valve"
+        DN63:
+            src: "https://i.imgur.com/uktgg69.jpg"
+            id: "DN63 Valve"
+        Drf:
+            src: "https://i.imgur.com/53WW9xt.jpg"
+            id: "Drift"
+    Pump:
+        VPT:
+            src: "https://i.imgur.com/TipRoYj.jpg"
+
+LEBT:
+    <<: *common
+    IS:
+        src: "https://i.imgur.com/VwrDyYP.jpg"
+    Sol:
+        src: "https://i.imgur.com/q0ot7vO.jpg"
+    Iris:
+        src: "https://i.imgur.com/P8cf7lR.jpg"
+    Dpl:
+        Dpl:
+            src: "https://i.imgur.com/olxLsKP.jpg"
+    Cone:
+        src: "https://i.imgur.com/XNm5HUR.jpg"
+
+MEBT:
+    <<: *common
+    ChDump:
+        src: "https://i.imgur.com/XNm5HUR.jpg"
+    Cav:
+        src: "https://i.imgur.com/dpwwhsH.jpg"
+    RFQ:
+        src: "https://i.imgur.com/I5VopLb.jpg"
+
+DTL:
+    <<: *common
+    DTC_Start:
+        src: "https://i.imgur.com/3ZWoSDk.jpg"
+    DTC_End:
+        src: "https://i.imgur.com/b29u1fS.jpg"
+        ncells:
+            1: 62
+            2: 36
+            3: 30
+            4: 26
+            5: 24
+    QV:
+        src: "https://i.imgur.com/kIFWIjr.jpg"
+    QH:
+        src: "https://i.imgur.com/mTAs72z.jpg"
+    CV:
+        src: "https://i.imgur.com/oOwwdKA.jpg"
+    CH:
+        src: "https://i.imgur.com/oOwwdKA.jpg"
+    BPM:
+        BPM:
+            src: "https://i.imgur.com/Zcclk3y.jpg"
+
+SPK:
+    <<: *common
+    Cav:
+        src: "https://i.imgur.com/K8leAAJ.jpg"
+
+MBL:
+    <<: *common
+    Cav:
+        src: "https://i.imgur.com/4OsMQCz.jpg"
+
+HBL:
+    <<: *common
+    Cav:
+        src: "https://i.imgur.com/SBDK6Mr.jpg"
+
+HEBT:
+    <<: *common
+    Drf:
+        '010':
+            Drf:
+                1:
+                    - "DN100F"
+                    - "DN100"
+                4:
+                    - "DN100"
+        '040':
+            Drf:
+                1: "DN100"
+        '070':
+            Drf:
+                1: "DN100"
+        '100':
+            Drf:
+                1: "DN100"
+        '130':
+            Drf:
+                1: "DN100"
+        '160':
+            Drf:
+                1: "DN100"
+                2: "DN100"
+
+A2T:
+    <<: *common
+    TGT:
+        src: "https://i.imgur.com/I2U7Lb8.jpg"
+        zShift: 185
+    RstH:
+        src: "https://i.imgur.com/AJVSECY.jpg"
+        RSM:
+            src: "https://i.imgur.com/3Y6mA6j.jpg"
+    RstV:
+        src: "https://i.imgur.com/AJVSECY.jpg"
+        RSM:
+            src: "https://i.imgur.com/3Y6mA6j.jpg"
+    .4Drf: &4drft
+        # This is just to reduce number of lines (see following)
+        1: "Drf"
+        2: "Drf"
+        3: "Drf"
+        4: "Drf"
+    Drf:
+        '010':
+            Drf:
+                <<: *4drft
+        '020':
+            Drf:
+                <<: *4drft
+        '030':
+            Drf:
+                <<: *4drft
+        '040':
+            Drf:
+                <<: *4drft
+        '050':
+            Drf:
+                <<: *4drft
+        '060':
+            Drf:
+                <<: *4drft
+        '080':
+            Drf:
+                1: "DN160"
+        '100':
+            Drf:
+                1: "DN160"
+        '130':
+            Drf:
+                1: "DN160"
+                2: "DN40"
+        '140':
+            D2T:
+                <<: *4drft
+
+DumpL:
+    <<: *common
+    DMP:
+        src: "https://i.imgur.com/Au63bWP.jpg"
+    Drf:
+        '010':
+            Drf:
+                1: "DN100"
+        '030':
+            Drf:
+                3: "DN100F"
+        '040':
+            Drf:
+                3: "DN200"

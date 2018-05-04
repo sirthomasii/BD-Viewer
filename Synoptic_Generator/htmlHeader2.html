@@ -1,0 +1,959 @@
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://confluence.esss.lu.se/download/attachments/217722569/jquery.canvasjs.min.js?api=v2"></script>
+</head>
+<style type="text/css">
+
+#tabs {
+
+    width: 90%;
+    height: 30px;
+    border-bottom: solid 1px #CCC;
+    /* padding-right: 2px; */
+    margin-top: 10px;
+    padding-bottom: 1px;
+
+}
+a {cursor:pointer;}
+
+#tabs li {
+    float:left;
+    list-style:none;
+    border-top:1px solid #ccc;
+    border-left:1px solid #ccc;
+    border-right:1px solid #ccc;
+    margin-right:5px;
+    border-top-left-radius:3px;
+    border-top-right-radius:3px;
+      outline:none;
+}
+
+#tab1C {
+    font-size: 14px !important;
+}
+div.line{
+  transform-origin: 0 100%;
+  height: 3px; /* Line width of 3 */
+  background: black; /* Black fill */
+
+}
+#tabs li a {
+
+    font-family:Arial, Helvetica, sans-serif;
+    font-size: small;
+    font-weight: bold;
+    color: #000000;;
+   padding-top: 5px;
+   padding-left: 7px;
+   padding-right: 7px;
+    padding-bottom: 8px;
+    display:block;
+    background: #FFF;
+    border-top-left-radius:3px;
+    border-top-right-radius:3px;
+    text-decoration:none;
+    outline:none;
+
+}
+
+#tabs li a.inactive{
+
+    padding-top: 5px;
+        padding-bottom: 7px;
+        padding-left: 8px;
+        padding-right: 8px;
+        color: #666666;
+        /* background: #EEE; */
+        outline: none;
+        border-bottom: solid 1px #CCC;
+}
+
+#tabs li a:hover, #tabs li a.inactive:hover {
+
+
+    color: #5685bc;
+      outline:none;
+}
+
+#BLM {
+
+    display: none;
+
+}
+
+.container {
+    clear: both;
+        width: 100%;
+        text-align: center;
+        padding-top: 10px;
+        font-size: 20px;
+}
+
+.element {
+    width: auto;
+    height: 70px;
+    float: left;
+    margin-bottom:40px;
+  text-align: center;
+}
+.element img {
+    height: 100%;
+    width: auto;
+}
+.distance_text {
+}
+img.selected {
+    opacity: .5;
+}
+a.selected {
+  background-color:#1F75CC;
+  color:white;
+  z-index:100;
+}
+
+.distance_text, .energy_text, .aperture_text {
+    text-align: center;
+        font-size: 10px;
+
+}
+
+.aperture_chart{
+
+}
+
+.messagepop {
+  background-color:#FFFFFF;
+  border:1px solid #999999;
+  cursor:default;
+  display:none;
+  margin-top: 15px;
+  position:absolute;
+  text-align:left;
+  width:320px;
+  z-index:50;
+  padding: 5px 25px 20px;
+}
+body {
+    font-size: 10px;
+
+}
+label {
+  display: block;
+  margin-bottom: 3px;
+  padding-left: 15px;
+  text-indent: -15px;
+}
+#showDistances {
+
+}
+.button {
+    background-color: #0094ca; /* Green */
+    border: none;
+    color: white;
+    padding: 5px 5px;
+    text-align: center;
+    text-deCXation: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 4px 2px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    cursor: pointer;
+        border-radius: 3px;
+}
+.button:hover {
+    background-color: #b2eaff;
+    color: black;
+}
+#buttonBar {
+float: left;
+width: 100%;
+height: 50px;
+}
+.messagepop p, .messagepop.div {
+  border-bottom: 1px solid #EFEFEF;
+  margin: 8px 0;
+  padding-bottom: 8px;
+}
+</style>
+<script>
+
+const numberWithCommas = (x) => {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+$(document).ready(function(){
+var element
+var showMCSDistances = false;
+var showTCSDistances = false;
+var showEnergies = false;
+var showBLMs = true;
+var showApertures = false;
+var showApertureChart = false;
+var hb_slot_config = {
+	'10':'E6',
+	'20':'E2',
+	'30':'E3',
+	'40':'E7',
+	'50':'E3',
+	'60':'E7',
+	'70':'E3',
+	'80':'E7',
+	'90':'E3',
+	'100':'E7',
+	'110':'E3',
+	'120':'E7',
+	'130':'E3',
+	'140':'E7',
+	'150':'E3',
+	'160':'E7',
+	'170':'E7',
+	'180':'E3',
+	'190':'E7',
+	'200':'E7',
+	'210':'E3'
+	};
+	var hebt_LWU_slot_config = {
+		'10':'E1',
+		'20':'E3',
+		'30':'E7',
+		'40':'E3',
+		'50':'E7',
+		'60':'E3',
+		'70':'E7',
+		'80':'E3',
+		'90':'E7',
+		'100':'E3',
+		'110':'E7',
+		'120':'E3',
+		'130':'E7',
+		'140':'E3',
+		'150':'E7',
+		'160':'E6'
+		};
+		var hebt_Drf_slot_config = {
+			'10':'BP4',
+			'20':'BP2',
+			'30':'BP3',
+			'40':'BP2',
+			'50':'BP2',
+			'60':'BP3',
+			'70':'BP2',
+			'80':'BP6',
+			'90':'BP3',
+			'100':'BP2',
+			'110':'BP6',
+			'120':'BP3',
+			'130':'BP2',
+			'140':'BP6',
+			'150':'BP3',
+			'160':'BP5'
+			};
+
+var spk_slot_config = {
+    '10':'S1',
+    '20':'S2',
+    '30':'S5',
+    '40':'S2',
+    '50':'S6',
+    '60':'S3',
+    '70':'S5',
+    '80':'S4',
+    '90':'S5',
+    '100':'S4',
+    '110':'S5',
+    '120':'S4',
+    '130':'S5'
+    };
+    var mb_slot_config = {
+        '10':'E1',
+        '20':'E2',
+        '30':'E7',
+        '40':'E2',
+        '50':'E4',
+        '60':'E5',
+        '70':'E7',
+        '80':'E3',
+		'90':'E7'
+
+        };
+        var LEBT_config = {
+            '10':'E1',
+            '20':'E2',
+            '30':'E7',
+            '40':'E2',
+            '50':'E4',
+            '60':'E5',
+            '70':'E7',
+            '80':'E3',
+            '90':'E7',
+
+            };
+var sketchfab_slot = {
+  "E1" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/0238f3383f0e4cac9079a39e8b59a079/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "E2" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/617b839a1d3d42b2837ca3d19adb7428/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "E3" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/45aacafb378b4b5d9895780ed5443ad4/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "E4" : '',
+	"E5" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/af85e1aade6c415bac73f72ccb20ef7d/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "E6" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c2cf454b70d64dea952ae488eff1b260/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "E7" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/45aacafb378b4b5d9895780ed5443ad4/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+
+    "S1" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/7a66b7ea5e414680acd6dce71a42b0b3/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "S2" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/85730d30cdd84b1bb2f62f919b0e341f/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "S3" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/0bc7267c1e6945f197147ca2d69b1480/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "S4" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/4174f5dfe0a14e04a96d993fc817087e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "S5" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/4174f5dfe0a14e04a96d993fc817087e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"S6" : '',
+	"BP1" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/570b50542df744ff920b7a1c04c411b1/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "BP2" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/88aa671a38764a9e8733ba335f44073a/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "BP3" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/7548da728194486a8e4fe46de000a0c8/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"BP4" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/20426530f75d4e5097d6dd380a6624ee/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"BP6" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/2657d901b26b41b1b418023a2d713e85/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+};
+
+var sketchfab_QUA = {
+  "Spk" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/ba0b533cac5646308d45100ec6598c94/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "MBL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/8d9565be053b4930a8fb128f84062118/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "HBL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/8d9565be053b4930a8fb128f84062118/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "HEBT" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/8d9565be053b4930a8fb128f84062118/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "DmpL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/8d9565be053b4930a8fb128f84062118/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+
+};
+var sketchfab_CX = {
+  "Spk" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/471ff9958f6041e0bb64230928d1705e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "MBL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/51f64dd9c1b645c2ad770c3b4a0cfa0e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "HBL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/51f64dd9c1b645c2ad770c3b4a0cfa0e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "HEBT" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/51f64dd9c1b645c2ad770c3b4a0cfa0e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "DmpL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/51f64dd9c1b645c2ad770c3b4a0cfa0e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+
+};
+var sketchfab_BPM = {
+  "Spk" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/3fb3622af70e4a3588b63e730a450129/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "MBL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/afc8737f0b1d4a38aaa69633ffd21e71/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "HBL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/afc8737f0b1d4a38aaa69633ffd21e71/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "HEBT" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/afc8737f0b1d4a38aaa69633ffd21e71/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "DmpL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/afc8737f0b1d4a38aaa69633ffd21e71/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+
+};
+var sketchfab_CAV = {
+  "Spk" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/a070ae4880044ade90b0a0cfb1227f88/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "MBL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c12724e1aec641b0aefa04dee9d80a46/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "HBL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c12724e1aec641b0aefa04dee9d80a46/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "HEBT" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c12724e1aec641b0aefa04dee9d80a46/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "DmpL" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c12724e1aec641b0aefa04dee9d80a46/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+
+};
+var sketchfab_LEBT_elements = {
+  "Sol" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/98d620facde64b2d95248e7afd4d8655/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "Chop" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/a08b7f9976144e418e98a2dc94ede820/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "Iris" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/0747882610bf4ee583f7b6d905bb165d/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "EMU" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/0e0bd28e74c6499b8830f847e486a89b/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "NPM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/bb7e2e519ff84541a2cc6634b537653f/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "FC" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/b725fdb07e6d4909a5be2ed6e4cd2acc/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "Coll" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/b67fe21c345d43c0a546f3304b7a1a62/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "BCM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/cea851d5393c4eed803fb1d9032be53b/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+
+};
+var sketchfab_SPK_elements = {
+    "BPM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/3fb3622af70e4a3588b63e730a450129/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"LBM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/b1ff74e156d948efa9a950d600527047/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "CX" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/471ff9958f6041e0bb64230928d1705e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "QH" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/ba0b533cac5646308d45100ec6598c94/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "QV" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/ba0b533cac5646308d45100ec6598c94/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"WS" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/09177ed8ba964d7e8c559e99296b7ee7/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"BCM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/23f20133ba2d47c390f2c63d9a18199a/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"NPM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/fc4ccc2937134e099e09891a7a1aa4b2/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"DN63 Valve" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/9079db468da447de8516653aa1b3a58b/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+
+	"Cav" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/23f20133ba2d47c390f2c63d9a18199a/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+
+};
+
+var sketchfab_ELL_elements = {
+    "Cav" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c12724e1aec641b0aefa04dee9d80a46/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "BPM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/afc8737f0b1d4a38aaa69633ffd21e71/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "QV" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/8d9565be053b4930a8fb128f84062118/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+    "QH" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/8d9565be053b4930a8fb128f84062118/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"WS" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/09177ed8ba964d7e8c559e99296b7ee7/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"NPM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/fc4ccc2937134e099e09891a7a1aa4b2/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"BCM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/82dc5a007def4ae59b4b7cea3e2d048f/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"DN100 Valve" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/e951257823384822bbe04022c618893d/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"DN100 Fast Valve" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c2982aed9bba4c85928ef3aa669a5325/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"DN200 Valve" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/0e65e66c903e4c869a9bd9474c6ca29a/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"DV" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/7c613db810474a12adc540ff84eb7bad/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+
+    "CX" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/51f64dd9c1b645c2ad770c3b4a0cfa0e/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+};
+var sketchfab_A2T_elements = {
+	"BPM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/1fe42989ba0d40c88f82a6dd2f99caa5/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"QV" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c397351237b34b5c95012a657ac9de26/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"QH" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/c397351237b34b5c95012a657ac9de26/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"WS" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/09177ed8ba964d7e8c559e99296b7ee7/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"BCM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/82dc5a007def4ae59b4b7cea3e2d048f/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"DN160 Valve" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/a95d09a81a894fe4be319e2754dfea23/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"DN40 Valve" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/4ce9db198a2147c9a8ed9f742604adac/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "RstH" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/edd2a79b0a6d4e56bc5dad9d12daffa7/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+  "RstV" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/edd2a79b0a6d4e56bc5dad9d12daffa7/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"DV" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/7c613db810474a12adc540ff84eb7bad/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+
+	"CX" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/0b511d043582465599c16c3c653d224f/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+};
+
+var sketchfab_ISRC_elements = {
+    "IS" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/69c40b35870a48359471bbf630fc3baf/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+
+};
+var sketchfab_PBImodels_elements = {
+	"nBLM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/7d17d5314e4f4bbcb32ad82a9a3ffcd6/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"ICBLM" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/7d17d5314e4f4bbcb32ad82a9a3ffcd6/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"WS" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/09177ed8ba964d7e8c559e99296b7ee7/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>',
+	"FWS" : '<div class="sketchfab-embed-wrapper"><iframe width="320" height="240" src="https://sketchfab.com/models/6e95b625ebf1414ca0c1dfe920fc0d85/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe></div>'
+};
+
+
+var slot_drawings = {
+  "E1" : 'https://confluence.esss.lu.se/download/attachments/53085119/E1.pdf?api=v2',
+  "E2" : 'https://confluence.esss.lu.se/download/attachments/53085119/E2.pdf?api=v2',
+  "E3" : 'https://confluence.esss.lu.se/download/attachments/53085119/E3.pdf?api=v2',
+    "E4" : '',
+    "E5" : 'https://confluence.esss.lu.se/download/attachments/53085119/E5.pdf?api=v2',
+    "E6" : 'https://confluence.esss.lu.se/download/attachments/53085119/E6.pdf?api=v2',
+    "E7" : 'https://confluence.esss.lu.se/download/attachments/53085119/E7.pdf?api=v2',
+
+    "S1" : 'https://confluence.esss.lu.se/download/attachments/53085119/S1.pdf?api=v2',
+    "S2" : 'https://confluence.esss.lu.se/download/attachments/53085119/S2.pdf?api=v2',
+    "S3" : 'https://confluence.esss.lu.se/download/attachments/53085119/S3.pdf?api=v2',
+    "S4" : 'https://confluence.esss.lu.se/download/attachments/53085119/S4.pdf?api=v2',
+    "S5" : 'https://confluence.esss.lu.se/download/attachments/53085119/S5.pdf?api=v2',
+    "S6" : ''
+
+};
+
+var closeStuff = function() {
+    if (showTCSDistances) {
+        $('.tcs_distance_text').each(function( i ) {
+        $(this).remove();
+        });
+        $('.element').css( "padding-left", "0"  );
+        $('.element').css( "padding-right", "0"  );
+
+        //$('.element').css( "border", "none"  );
+        showTCSDistances = false;
+        document.getElementById('showTCSDistances').innerText = 'Show TCS Distances';
+        document.getElementById('showTCSDistances').style.backgroundColor = '#0094ca';
+    }
+    else if (showMCSDistances) {
+        $('.mcs_distance_text').each(function( i ) {
+        $(this).remove();
+        });
+        $('.element').css( "padding-left", "0"  );
+        $('.element').css( "padding-right", "0"  );
+
+        //$('.element').css( "border", "none"  );
+        showMCSDistances = false;
+        document.getElementById('showMCSDistances').innerText = 'Show MCS Distances';
+        document.getElementById('showMCSDistances').style.backgroundColor = '#0094ca';
+    }
+    else if (showEnergies) {
+        $('.energy_text').each(function( i ) {
+        $(this).remove();
+        });
+        $('.element').css( "padding-left", "0"  );
+        $('.element').css( "padding-right", "0"  );
+
+        //$('.element').css( "border", "none"  );
+        showEnergies = false;
+        document.getElementById('showEnergies').innerText = 'Show Energies';
+        document.getElementById('showEnergies').style.backgroundColor = '#0094ca';
+
+    }
+    else if (showApertureChart) {
+		$('.line').each(function( i ) {
+        $(this).remove();
+        });
+		$('.element_img').css( "opacity", "1"  );
+
+        //$('.element').css( "border", "none"  );
+        showApertureChart = false;
+        document.getElementById('showApertureChart').innerText = 'Show Aperture Chart';
+        document.getElementById('showApertureChart').style.backgroundColor = '#0094ca';
+
+    }
+    else if (showApertures) {
+        $('.aperture_text').each(function( i ) {
+        $(this).remove();
+        });
+        $('.element').css( "padding-left", "0"  );
+        $('.element').css( "padding-right", "0"  );
+
+        //$('.element').css( "border", "none"  );
+        showApertures = false;
+        document.getElementById('showApertures').innerText = 'Show Apertures';
+        document.getElementById('showApertures').style.backgroundColor = '#0094ca';
+    }
+};
+
+
+$('#tabs li a:not(:first)').addClass('inactive');
+$('.container').hide();
+$('.container:first').show();
+
+$('#tabs li a').click(function(event){
+    var t = $(this).attr('id');
+  if($(this).hasClass('inactive')){ //this is the start of our condition
+    $('#tabs li a').addClass('inactive');
+    $(this).removeClass('inactive');
+
+    $('.container').hide();
+    $('#'+ t + 'C').fadeIn('slow');
+ }
+});
+
+$("#showMCSDistances").on('click', function(event) {
+                event.preventDefault();
+
+                    if (!showMCSDistances) {
+                        closeStuff();
+                        $('.element').each(function( i ) {
+                        mcs_y = $(this).attr('mcs_y');
+                        mcs_z = $(this).attr('mcs_z');
+                        mcs_z = (mcs_z >= 0 || -1) * Math.round(Math.abs(mcs_z) * 10 ) / 10;
+                        mcs_y = (mcs_y >= 0 || -1) * Math.round(Math.abs(mcs_y) * 10 ) / 10;
+                        $(this).append('<div class="mcs_distance_text">'+numberWithCommas(mcs_z)+" mm</div>");
+                        $(this).append('<div class="mcs_distance_text">'+numberWithCommas(mcs_y)+" mm</div>");
+                        });
+                        $('.element').css( "padding-left", "5px"  );
+                        $('.element').css( "padding-right", "5px"  );
+                        //$('.element').css( "border", "1px solid"  );
+                        showMCSDistances = true;
+                        document.getElementById('showMCSDistances').innerText = 'Hide MCS Distances';
+                        document.getElementById('showMCSDistances').style.backgroundColor = '#000059';
+                    }
+                    else if (showMCSDistances) {
+                        closeStuff();
+
+                    }
+
+  });
+    $("#showTCSDistances").on('click', function(event) {
+                    event.preventDefault();
+
+                        if (!showTCSDistances) {
+                            closeStuff();
+
+                            $('.element').each(function( i ) {
+                            tcs_y = $(this).attr('tcs_y');
+                            tcs_z = $(this).attr('tcs_z');
+                            tcs_z = (tcs_z >= 0 || -1) * Math.round(Math.abs(tcs_z) * 10 ) / 10;
+                            tcs_y = (tcs_y >= 0 || -1) * Math.round(Math.abs(tcs_y) * 10 ) / 10;
+                            $(this).append('<div class="tcs_distance_text">'+numberWithCommas(tcs_z)+" mm</div>");
+                            $(this).append('<div class="tcs_distance_text">'+numberWithCommas(tcs_y)+" mm</div>");
+                            });
+                            $('.element').css( "padding-left", "5px"  );
+                            $('.element').css( "padding-right", "5px"  );
+
+                            //$('.element').css( "border", "1px solid"  );
+                            showTCSDistances = true;
+                            document.getElementById('showTCSDistances').innerText = 'Hide TCS Distances';
+                            document.getElementById('showTCSDistances').style.backgroundColor = '#000059';
+                        }
+                        else if (showTCSDistances) {
+                            closeStuff();
+
+                        }
+
+      });
+		function createLine(x1,y1, x2,y2){
+			var length = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+			var angle  = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+			var transform = 'rotate('+angle+'deg)';
+
+				var line = $('<div>')
+						.appendTo('#main-content')
+					.addClass('line')
+					.css({
+						'position': 'absolute',
+						'transform': transform
+					})
+					.width(length)
+					.offset({left: x1, top: y1});
+
+			return line;
+		};
+
+    $("#showEnergies").on('click', function(event) {
+                    event.preventDefault();
+
+                        if (!showEnergies) {
+                            closeStuff();
+
+                            $('.element').each(function( i ) {
+                            elementEnergy = $(this).attr('elementEnergy');
+                            if (($(this).attr('section')=="LEBT") || ($(this).attr('section')=="ISrc")){
+                                elementEnergy =  Math.round(elementEnergy * 1000) / 1000;
+                            }
+                            else {
+                                elementEnergy =  Math.round(elementEnergy * 10) / 10;
+
+                            }
+                            //elementEnergy =  Math.round(elementEnergy) * 10 / 10;
+                            $(this).append('<div class="energy_text">'+elementEnergy+"MeV</div>");
+                            });
+                            $('.element').css( "padding-left", "5px"  );
+                            $('.element').css( "padding-right", "5px"  );
+
+                            //$('.element').css( "border", "1px solid"  );
+                            showEnergies = true;
+                            document.getElementById('showEnergies').innerText = 'Hide Energies';
+                            document.getElementById('showEnergies').style.backgroundColor = '#000059';
+                        }
+                        else if (showEnergies) {
+                            closeStuff();
+
+                        }
+
+      });
+
+        $("#showApertures").on('click', function(event) {
+                        event.preventDefault();
+
+                            if (!showApertures) {
+                                closeStuff();
+
+                                $('.element').each(function( i ) {
+                                elementAperture = $(this).attr('aperture');
+                                elementAperture =  Math.round(elementAperture * 10) / 10;
+                                //elementEnergy =  Math.round(elementEnergy) * 10 / 10;
+                                $(this).append('<div class="aperture_text">'+elementAperture+"mm</div>");
+                                });
+                                $('.element').css( "padding-left", "10px"  );
+                                $('.element').css( "padding-right", "5px"  );
+
+                                //$('.element').css( "border", "1px solid"  );
+                                showApertures = true;
+                                document.getElementById('showApertures').innerText = 'Hide Apertures';
+                                document.getElementById('showApertures').style.backgroundColor = '#000059';
+                            }
+                            else if (showApertures) {
+                                closeStuff();
+
+                            }
+
+          });
+
+            $("#showApertureChart").on('click', function(event) {
+                            event.preventDefault();
+
+                            var j = 0;
+                                if (!showApertureChart) {
+                                    closeStuff();
+
+                                    $('.element').each(function( i ) {
+                                    elementAperture = $(this).attr('aperture');
+                                    elementAperture =  Math.round(elementAperture * 10) / 10;
+									offset = $(this).offset();
+									x1 = offset.left
+									x2 = offset.left
+									y1 = elementAperture*(-100/250)+25
+									y2 = elementAperture*(-100/250)+25
+
+									console.log(x1 + x2 + y1);
+									var length = $(this).width();
+									//var length = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+									var angle  = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+									var transform = 'rotate('+angle+'deg)';
+									$(this).append('<div class="line" style="position:relative; transform:'+transform+';width:'+length+'px;left:'+0+'px;top:'+y1+'px;">')
+
+                                    });
+									$('.element_img').css( "opacity", ".5"  );
+                                    //$('.element').css( "border", "1px solid"  );
+                                    showApertureChart = true;
+                                    document.getElementById('showApertureChart').innerText = 'Hide Aperture Chart';
+                                    document.getElementById('showApertureChart').style.backgroundColor = '#000059';
+                                }
+                                else if (showApertureChart) {
+                                    closeStuff();
+
+                                }
+
+              });
+
+
+    $("#showBLMs").on('click', function(event) {
+                        event.preventDefault();
+
+                        if (!showBLMs) {
+                            $('.element').each(function( i ) {
+
+                                if (($(this).attr('id')=="BLM")) {
+                                    console.log($(this).attr('id'));
+
+                                        $(this).css("display", "none");
+                                }
+                            });
+                            //$('.element').css( "border", "1px solid"  );
+                            showBLMs = true;
+                            document.getElementById('showBLMs').innerText = 'Show BLMs';
+                            document.getElementById('showBLMs').style.backgroundColor = '#0094ca';
+                        }
+                        else if (showBLMs) {
+                            $('.element').each(function( i ) {
+                                        $(this).css( "display", "block"  );
+                            });
+                            //$('.element').css( "border", "none"  );
+                            showBLMs = false;
+                            document.getElementById('showBLMs').innerText = 'Hide BLMs';
+                            document.getElementById('showBLMs').style.backgroundColor = '#000059';
+                        }
+
+      });
+
+function deselect(e) {
+  $('.pop').slideFadeToggle(function() {
+    e.removeClass('selected');
+  });
+}
+
+
+$(function() {
+  $('.element_img').on('click', function(event) {
+        event.preventDefault();
+
+
+    if(($(this).hasClass('selected')) && ($(this).parent().hasClass('element'))) {
+      deselect($(this));
+			$('#element3DTab').css( "display", "block"  );
+
+    }
+
+        else if($('.element_img').hasClass('selected')){
+            deselect($('.selected'));
+			$('#element3DTab').css( "display", "block"  );
+
+
+}
+
+        else if($(this).parent().hasClass('element')) {
+      $(this).addClass('selected');
+      $('.pop').css({ top: event.pageY, left:  event.pageX}).slideFadeToggle();
+     element = $(this).parent().attr('id');
+     index = $(this).parent().attr('index');
+     section = $(this).parent().attr('section');
+     slot_number = $(this).parent().attr('slot_number');
+     tcs_y = $(this).parent().attr('tcs_y');
+     tcs_z = $(this).parent().attr('tcs_z');
+     mcs_y = $(this).parent().attr('mcs_y');
+     mcs_z = $(this).parent().attr('mcs_z');
+	 model = $(this).parent().attr('model');
+	 insightLink = $(this).parent().attr('insightLink');
+
+     essname = $(this).parent().attr('essname');
+     elementEnergy = $(this).parent().attr('elementEnergy');
+     elementEnergy =  Math.round(elementEnergy * 10) / 10;
+     elementAperture = $(this).parent().attr('aperture');
+
+     if($(this).parent().attr('slot_type')) {
+     slot_type = $(this).parent().attr('slot_type');
+     }
+     else {
+        slot_type = "N/A"
+     }
+     $('#popup_element').html(element);
+
+
+     $('#popup_index').html(index);
+     $('#popup_section').html(section);
+     $('#popup_slot_type').html(slot_type);
+     $('#popup_slot_number').html(slot_number);
+     $('#popup_essname').html(essname);
+	 console.log(insightLink);
+
+	 if (insightLink != "n/a") {
+		 		insightLink = "https://jira.esss.lu.se/secure/ShowObject.jspa?id="+insightLink;
+			 $('#popup_essname').attr('href',insightLink);
+			 $('#popup_essname').css( "text-decoration", "");
+			 $('#popup_essname').css( "color", "");
+			 $('#popup_essname').css( "pointer-events", "");
+
+	 }
+	 else {
+		 $('#popup_essname').removeAttr('href');
+		 $('#popup_essname').css( "text-decoration", "none");
+		 $('#popup_essname').css( "color", "black");
+		 $('#popup_essname').css( "pointer-events", "none");
+	 }
+
+	if (model) {
+		$('#popup_model').html(model);
+	}
+	else {
+		$('#popup_model').html('n/a');
+	}
+
+     $('#popup_tcs_z').html(tcs_z);
+     $('#popup_tcs_y').html(tcs_y);
+     $('#popup_mcs_z').html(mcs_z);
+        $('#popup_mcs_y').html(mcs_y);
+     $('#popup_energy').html(elementEnergy);
+     $('#popup_aperture').html(elementAperture);
+   $('#sketchfab_component').html('');
+//GENERATE SKETCHFAB 3D ELEMENTS
+            if(section == 'ISrc'){
+                $('#sketchfab_component').html(sketchfab_ISRC_elements[element]);
+            }
+            else if(section == 'LEBT'){
+                $('#sketchfab_component').html(sketchfab_LEBT_elements[element]);
+            }
+            else if(section == 'Spk'){
+                $('#sketchfab_component').html(sketchfab_SPK_elements[element]);
+            }
+            else if((section == 'MBL') || (section == 'HBL') || (section == 'HEBT') || (section == 'DmpL')){
+                //console.log(element);
+				if ($.inArray(element, ["BLM", "WS"]) >= 0) {
+					$('#sketchfab_component').html(sketchfab_PBImodels_elements[model]);
+				}
+				else {
+					$('#sketchfab_component').html(sketchfab_ELL_elements[element]);
+				}
+			}
+			else if(section == 'A2T') {
+				//console.log(element);
+				if ($.inArray(slot_number, ["010", "020", "030", "040", "050", "060", "070"]) >= 0) {
+                $('#sketchfab_component').html(sketchfab_ELL_elements[element]);
+            }
+				else {
+					$('#sketchfab_component').html(sketchfab_A2T_elements[element]);
+				}
+			}
+
+//BUILD SLOT 3D/2D DATA
+                                    if(slot_type == 'LWU'){
+                                        if(section == 'Spk'){
+                                            //console.log(slot_number);
+
+                                            for (var key in spk_slot_config) {
+                                                    if(slot_number == parseInt(key,10)){
+                                                            $('#sketchfab_slot').html(sketchfab_slot[spk_slot_config[key]]);
+                                                            $('#slot_drawing').attr('href',slot_drawings[spk_slot_config[key]]);
+                                                            $('#slot_drawing').html(spk_slot_config[key]);
+
+                                                        }
+                                                }
+                                            }
+                                        else if(section == 'MBL'){
+                                            for (var key in mb_slot_config) {
+                                                    if(slot_number == parseInt(key,10)){
+                                                            $('#sketchfab_slot').html(sketchfab_slot[mb_slot_config[key]]);
+                                                            $('#slot_drawing').attr('href',slot_drawings[mb_slot_config[key]]);
+                                                            $('#slot_drawing').html(mb_slot_config[key]);
+
+                                                        }
+                                                }
+                                            }
+											else if(section == 'HBL'){
+												for (var key in hb_slot_config) {
+													    if(slot_number == parseInt(key,10)){
+																$('#sketchfab_slot').html(sketchfab_slot[hb_slot_config[key]]);
+																$('#slot_drawing').attr('href',slot_drawings[hb_slot_config[key]]);
+																$('#slot_drawing').html(hb_slot_config[key]);
+
+                                            }
+													}
+												}
+												else if(section == 'HEBT'){
+													for (var key in hebt_LWU_slot_config) {
+														    if(slot_number == parseInt(key,10)){
+																	$('#sketchfab_slot').html(sketchfab_slot[hebt_LWU_slot_config[key]]);
+																	$('#slot_drawing').attr('href',slot_drawings[hebt_LWU_slot_config[key]]);
+																	$('#slot_drawing').html(hebt_LWU_slot_config[key]);
+
+																}
+														}
+													}
+											}
+									else if(slot_type == 'Crm'){
+										//console.log('something');
+										if ($('#popup_element').html() == "Cav") {
+											$('#element3DTab').css( "display", "none"  );
+										}
+                                            if(section == 'Spk'){
+														 $('#sketchfab_slot').html('<iframe width="320" height="240" src="https://sketchfab.com/models/a070ae4880044ade90b0a0cfb1227f88/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>');
+                                                        }
+                                            if((section == 'MBL') || (section == 'HBL') || (section == 'HEBT')){
+														$('#sketchfab_slot').html('<iframe width="320" height="240" src="https://sketchfab.com/models/c12724e1aec641b0aefa04dee9d80a46/embed" frameborder="0" allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe>');
+															}
+												}
+									else if(slot_type == 'Drf'){
+										//console.log('something');
+										 if(section == 'HEBT'){
+											 if ($('#popup_element').html() == "Drf") {
+												 $('#element3DTab').css( "display", "none"  );
+											 }
+												for (var key in hebt_Drf_slot_config) {
+															if(slot_number == parseInt(key,10)){
+																$('#sketchfab_slot').html(sketchfab_slot[hebt_Drf_slot_config[key]]);
+																$('#slot_drawing').attr('href',slot_drawings[hebt_Drf_slot_config[key]]);
+																$('#slot_drawing').html(hebt_Drf_slot_config[key]);
+
+															}
+												}
+                                                            }
+                                                }
+                                        else {
+											$('#sketchfab_slot').html('N/A');
+											$('#slot_drawing').html('N/A');
+
+                                            }
+
+
+                }
+
+        $('#tabs li a:not(:first)').addClass('inactive');
+        $('#tabs li a:first').removeClass('inactive');
+
+        $('.container').hide();
+        $('.container:first').show();
+    return false;
+  });
+
+  $('.close').on('click', function(e) {
+        event.preventDefault();
+    deselect($('.element_img'));
+    $('#sketchfab_component').html('');
+    return false;
+  });
+});
+
+$.fn.slideFadeToggle = function(easing, callback) {
+  return this.animate({ opacity: 'toggle', height: 'toggle' }, 'fast', easing, callback);
+};
+});
+
+</script>
+
+<div class="header-buttons" id="buttonBar">
+    <button class="button" id="showMCSDistances">Show MCS Distances</button>
+    <button class="button" id="showTCSDistances">Show TCS Distances</button>
+    <button class="button" id="showEnergies">Show Energies</button>
+    <button class="button" id="showApertures">Show Apertures</button>
+    <button class="button" id="showApertureChart">Show Aperture Chart</button>
+    <button class="button" id="showBLMs">Show BLMs</button></div>
+<div class="messagepop pop">
+    <form method="post" id="new_message" action="/messages" style="font-size:12px;">
+                <ul id="tabs">
+      <li><a id="tab1">Data</a></li>
+			<li id="element3DTab"><a id="tab2">3D Elem</a></li>
+            <li><a id="tab3">3D Slot</a></li>
+            <li><a id="tab4">2D Slot</a></li>
+
+        </ul>
+		<div class="container" id="tab1C">        Element: <b id="popup_element"></b>, <br>Model: <b id="popup_model"></b>, <br>Energy: <b id="popup_energy"></b> MeV, <br>Index: <b id="popup_index"></b>, <br>Section: <b id="popup_section"></b>, <br>Slot type: <b id="popup_slot_type"></b>
+
+						<br>TCSz: <b id="popup_tcs_z"></b> mm, <br>TCSy: <b id="popup_tcs_y"></b> mm, <br>ESS Name: <b><a href="" target="_blank" id="popup_essname"></a></b>
+</div>
+        <div class="container" id="tab2C"><div id="sketchfab_component" class="sketchfab-embed-wrapper"></div></div>
+        <div class="container" id="tab3C"><div id="sketchfab_slot" class="sketchfab-embed-wrapper"></div></div>
+        <div class="container" id="tab4C">PDF:<a href="" id="slot_drawing" ></a></div>
+
+    </form>
+</div>

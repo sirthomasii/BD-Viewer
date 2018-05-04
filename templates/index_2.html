@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>BD Control center</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <link href="static/css/style.css" rel="stylesheet">
+
+    <script src="static/js/jquery-1.9.0.js"></script>
+    <link href="static/css/richtext.css" rel="stylesheet">
+
+    <script src="static/js/richtext.js"></script>
+    <script src="static/js/script.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="static/js/jquery.rss.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sidebar/3.3.2/jquery.sidebar.min.js"></script>
+
+    <script>
+    $.ajaxSetup({
+  cache:false
+});
+var PVNameList = [];
+var PVData = {}
+var PVBlockNumber = {}
+var PVFrame = {}
+var PVFirstRun = {}
+var PVParameters = {}
+var PVPostData = {}
+
+$(document).ready(function() {
+
+  var PV_level = 0;
+
+  drawPVs();
+  getPVSuffixes();
+
+//DRAW PV list
+  function drawPVs() {
+    var PVs = [];
+    $.getJSON("../static/PVlist/BLEs_readable.json", function(PV_DATA) {
+      var html = createHTML(PV_DATA,false);
+
+       $( "<ul/>", {
+         html: html
+       }).addClass( "tree" ).appendTo( "#PVs" );
+
+       clicks();
+
+    })
+  }
+//GET PV suffixes
+  function getPVSuffixes() {
+    $.getJSON("../static/PVlist/BLE-PV.json", function(PV_DATA) {
+      PVParameters = PV_DATA;
+      //console.log(PVParameters);
+
+    })
+  }
+
+  function createHTML(json, isArray){
+
+     var html = '';
+     for(var key in json){
+         if(typeof json[key] == 'object'){
+
+             html += '<li><span>' + (!isArray ? '<strong>'+ key +'</strong>' : '') + '</span><ul>' + createHTML(json[key], (json[key] instanceof Array ? 1 : 0)) + '</ul></li>';
+         } else {
+             html += '<li><span class="BLE">'+ json[key] +'</span></li>';
+         }
+     }
+     return html;
+
+  }
+
+  function Plot(PVNames, plotType, traceNum, data){
+    if (typeof data == 'undefined') {
+      //DATA NOT SPECIFIED, CREATE PVDATA ARRAY, GET PVDATA
+      if (!(typeof PVData[PVNames] == 'undefined')) {
+          //console.log("add new trace PV");
+
+          i = PVData[PVNames].length;
+          PVData[PVNames][i] = [];
+          PVBlockNumber[PVNames][i] = [];
+          var traceNum = i;
+
+        }
+        else {
+          //console.log("1ST trace");
+
+          PVData[PVNames]=[];
+          PVData[PVNames][0]=[];
+          PVBlockNumber[PVNames]=[];
+          PVBlockNumber[PVNames][0]=[];
+          PVFrame[PVNames]=[];
+          PVFirstRun[PVNames]=[];
+
+          var traceNum = 0;
+        }
+
+        // getPVs(PVNames, plotType, traceNum);
+        getPVs();
+
+    }
+    else if (typeof PVFrame[PVNames][traceNum] == 'undefined') {
+      //DATA SPECIFIED, NO PLOT, SET PV FRAME TO ZERO, PLOT DATA
+      PVFrame[PVNames][traceNum]=0;
+      PVBlockNumber[PVNames][traceNum]=0;
+      PVFirstRun[PVNames][traceNum]=true;
+
+      //PVFrame[PVNames][traceNum]=0;
+      if (plotType=="scatter") {
+        scatterPlot(PVNames, data, traceNum);
+      }
+      else if (plotType=="contour") {
+        contourPlot(PVNames, data, traceNum);
+      }
+      else if (plotType=="scatter + line") {
+        scatterLinePlot(PVNames, data, traceNum);
+      }
+      else if (plotType=="heatMap") {
+        //console.log("1st data:" + data.length);
+        //console.log(data);
+        heatMapPlot(PVNames, data, traceNum);
+      }
+    }
+
+  }
+
+  function getPVs(PVNames, plotType, traceNum){
+      var postdata = {
+        "FromWhen":$("#fromWhen").val(), "UntilWhen":$("#untilWhen").val(),
+          "PVs": [$("#PVNames").val()+":"+$('input[name=PVSuffix]:checked').val()],
+          "plotType": $('input[name=plotType]:checked').val(),
+          "resolution": $("#resolution").val()
+
+      };
+
+      // console.log(PVFrame[PVNames][traceNum]);
+
+      if (((PVData[PVNames][traceNum].length < 3))||(PVData[PVNames][traceNum].length == 0)) {
+      //console.log(PVData);
+
+      postdata = JSON.stringify(postdata);
+      //console.log(PVData[PVNames][traceNum]);
+
+      console.log(PVNames);
+      $.ajax({
+        url: 'http://hinkocmbp.esss.lu.se:5000',
+        data: postdata,
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        type: 'POST',
+        success: function(response){
+          console.log(response);
+          PVData[PVNames][traceNum].push(response);
+          //console.log(PVData[PVNames][traceNum], PVNames, traceNum);
+
+          if (typeof PVFrame[PVNames][traceNum] == 'undefined') {
+            //Plot(PVNames, plotType, traceNum, PVData[PVNames][traceNum]);
+          }
+
+        },
+        error: function(error){
+          console.log("error");
+        }
+      });
+    }
+      setTimeout(function(){ getPVs(PVNames, plotType, traceNum); }, 1000);
+
+  }
+
+	$(document).on('click', '.getPVbutton', function(){
+      var PVName = $("#PVNames").val() + ":" + $('input[name=PVSuffix]:checked').val()
+    //console.log($('input[name=plotType]:checked').val());
+      Plot(PVName, $('input[name=plotType]:checked').val());
+		});
+
+  function clicks(){
+
+    $('#PVs').children('ul').find('span').click(function(event){
+      $(this).parent().children('ul').toggle();
+    });
+
+    $('#PVs').children('ul').find('ul').hide();
+  }
+
+  function scatterPlot(PVNames, data, traceNum) {
+          //console.log("run");
+
+          var plotName = (PVNames+"::"+traceNum.toString())
+          data_x = [];
+          data_y = [];
+          if (PVData[PVNames][traceNum].length > 0) {
+
+            for (var i = 0; i < data[PVBlockNumber[PVNames][traceNum]].length; i++) {
+                if (data[PVBlockNumber[PVNames][traceNum]][i]["PVName"].endsWith("Xpos")) {
+                  data_x = Array.apply(null, Array(data[PVBlockNumber[PVNames][traceNum]][i]["PVData"].length)).map(Number.prototype.valueOf,0);
+                  data_y.push(data[PVBlockNumber[PVNames][traceNum]][i]["PVData"]);
+
+                }
+            }
+          }
+          else {
+            setTimeout(function(){ scatterLinePlot(PVNames, data, traceNum); }, 500);
+            console.log("checking");
+          }
+
+          //console.log(data_y);
+          if(PVFirstRun[PVNames][traceNum]==true){
+          $( "#plots" ).append( "<div id='" + plotName + "' class='plot'></div>" );
+          var trace1 = {
+          x: data_x[0],
+          y: data_y[0],
+          marker: { size: 4 },
+          mode: 'markers',
+          type: 'scatter'
+          };
+        var layout = {
+          title: plotName,
+          width: 400,
+          height: 300,
+          yaxis: {
+            autorange: "false",
+            // range: [-4, 4]
+          },
+          xaxis: {
+            autorange: "false",
+            // range: [-3, 3]
+          }
+        };
+        PVFirstRun[PVNames][traceNum]=false;
+        var plot_data = [trace1];
+        Plotly.newPlot(plotName, plot_data, layout);
+
+      }
+      else {
+
+          Plotly.restyle(plotName, 'x', [data_y[PVFrame[PVNames][traceNum]]]);
+
+        }
+        if (PVFrame[PVNames][traceNum]<(data_y.length)) {
+           //console.log("no delete");
+
+            PVFrame[PVNames][traceNum]++;
+            setTimeout(function(){ scatterPlot(PVNames, data, traceNum); }, 70);
+
+        }
+        else {
+          //console.log("delete one");
+          PVData[PVNames][traceNum].shift();
+
+          //PVBlockNumber[PVNames] += 1;
+          PVFrame[PVNames][traceNum]=0;
+          setTimeout(function(){ scatterPlot(PVNames, data, traceNum); }, 70);
+
+          }
+    }
+
+  function scatterLinePlot(PVNames, data, traceNum) {
+          //console.log(PVParameters);
+
+          var plotName = (PVNames+"::"+traceNum.toString())
+          data_x = [];
+          data_y = [];
+
+          if (PVData[PVNames][traceNum].length > 0) {
+
+            for (var i = 0; i < data[PVBlockNumber[PVNames][traceNum]].length; i++) {
+                if (data[PVBlockNumber[PVNames][traceNum]][i]["PVName"].endsWith("Xpos")) {
+                  data_x = Array.apply(null, Array(data[PVBlockNumber[PVNames][traceNum]][i]["PVData"].length)).map(Number.prototype.valueOf,0);
+                  data_y.push(data[PVBlockNumber[PVNames][traceNum]][i]["PVData"]);
+                }
+
+              }
+          }
+          else {
+            setTimeout(function(){ scatterLinePlot(PVNames, data, traceNum); }, 500);
+            console.log("checking");
+          }
+
+          //console.log(data_y);
+          if(PVFirstRun[PVNames][traceNum]==true){
+          $( "#plots" ).append( "<div id='" + plotName + "' class='plot'></div>" );
+          var trace1 = {
+          x: data_x[0],
+          y: data_y[0],
+          marker: { size: 4 },
+          mode: 'lines+markers',
+          type: 'scatter'
+          };
+        var layout = {
+          title: plotName,
+          width: 400,
+          height: 300,
+          yaxis: {
+            autorange: "false",
+            // range: [-4, 4]
+          },
+          xaxis: {
+            autorange: "false",
+            // range: [-3, 3]
+          }
+        };
+        PVFirstRun[PVNames][traceNum]=false;
+        var plot_data = [trace1];
+        Plotly.newPlot(plotName, plot_data, layout);
+
+      }
+      else {
+
+          Plotly.restyle(plotName, 'x', [data_y[PVFrame[PVNames][traceNum]]]);
+
+        }
+        if (PVFrame[PVNames][traceNum]<(data_y.length)) {
+            PVFrame[PVNames][traceNum]++;
+            setTimeout(function(){ scatterLinePlot(PVNames, data, traceNum); }, 70);
+
+        }
+        else {
+          // console.log("delete one");
+          PVData[PVNames][traceNum].shift();
+
+          //PVBlockNumber[PVNames] += 1;
+          PVFrame[PVNames][traceNum]=0;
+          setTimeout(function(){ scatterLinePlot(PVNames, data, traceNum); }, 70);
+
+          }
+    }
+
+  function contourPlot(PVNames, data, traceNum) {
+          //console.log(PVParameters);
+
+          var plotName = (PVNames+"::"+traceNum.toString())
+          data_x = [];
+          data_y = [];
+          if (PVData[PVNames][traceNum].length > 0) {
+
+            for (var i = 0; i < data[PVBlockNumber[PVNames][traceNum]].length; i++) {
+                if (data[PVBlockNumber[PVNames][traceNum]][i]["PVName"].endsWith("Xpos")) {
+                  data_x = Array.apply(null, Array(data[PVBlockNumber[PVNames][traceNum]][i]["PVData"].length)).map(Number.prototype.valueOf,0);
+                  data_y.push(data[PVBlockNumber[PVNames][traceNum]][i]["PVData"]);
+
+                }
+
+            }
+          }
+          else {
+            setTimeout(function(){ contourPlot(PVNames, data, traceNum); }, 500);
+            console.log("checking");
+          }
+
+
+          //console.log(data_y);
+          if(PVFirstRun[PVNames][traceNum]==true){
+          $( "#plots" ).append( "<div id='" + plotName + "' class='plot'></div>" );
+          var trace1 = {
+          x: data_x[0],
+          y: data_y[0],
+          marker: {
+              color: 'rgb(100,100,255)',
+              size: 2,
+              opacity: 1
+            },
+          mode: 'markers',
+          type: 'scatter'
+          };
+          var trace2 = {
+            x: data_x[0],
+            y: data_y[0],
+            name: 'density',
+            ncontours: 12,
+            colorscale: 'Blues',
+            reversescale: true,
+            showscale: false,
+            type: 'histogram2dcontour'
+          };
+          var plot_data = [trace1, trace2];
+
+          var layout = {
+              title: plotName,
+
+
+              showlegend: false,
+              autosize: false,
+              width: 500,
+              height: 450,
+              margin: {t: 50},
+              hovermode: 'closest',
+              bargap: 0,
+              xaxis: {
+                autorange:false,
+                range: [-3, 3],
+                showgrid: false,
+                zeroline: false
+              },
+              plot_bgcolor:'rgba(220,220,220,1)',
+              yaxis: {
+                  autorange:false,
+                  range: [-6, 6],
+                  showgrid: false,
+                  zeroline: false
+                }
+              };
+
+        PVFirstRun[PVNames][traceNum]=false;
+        Plotly.newPlot(plotName, plot_data, layout);
+
+      }
+      else {
+
+          Plotly.restyle(plotName, 'x', [data_y[PVFrame[PVNames][traceNum]]]);
+
+        }
+        if (PVFrame[PVNames][traceNum]<(data_y.length)) {
+            PVFrame[PVNames][traceNum]++;
+            setTimeout(function(){ contourPlot(PVNames, data, traceNum); }, 70);
+
+        }
+        else {
+          // console.log("delete one");
+          PVData[PVNames][traceNum].shift();
+
+          //PVBlockNumber[PVNames] += 1;
+          PVFrame[PVNames][traceNum]=0;
+          setTimeout(function(){ contourPlot(PVNames, data, traceNum); }, 70);
+
+          }
+    }
+
+  function heatMapPlot(PVNames, data, traceNum, numX, numY) {
+      //console.log(PVData[PVNames][traceNum]);
+      //console.log(PVNames);
+      //console.log(traceNum);
+
+      numX = 100;
+      numY = 100;
+      IMG_data_x = [];
+      IMG_data_y = [];
+      // var randArray = Array.from({length: 90000}, () => Math.floor(Math.random() * 100));
+      var x = Array.from(new Array(numX),(val,index)=>index);
+      var y = Array.from(new Array(numY),(val,index)=>index);
+      IMG_data_z = [];
+      var plotName = (PVNames+"::"+traceNum.toString())
+      var IMG_data_raw = data[PVBlockNumber[PVNames][traceNum]];
+      //console.log();
+      //console.log(IMG_data_raw);
+      //console.log(IMG_data_raw[PVFrame[PVNames][traceNum]]["PVData"].length)
+      if (PVData[PVNames][traceNum].length > 0) {
+
+        for(var j=0;j < IMG_data_raw[PVFrame[PVNames][traceNum]]["PVData"].length;j = j+numX)
+        IMG_data_z.push(IMG_data_raw[PVFrame[PVNames][traceNum]]["PVData"].slice(j,j+numX));
+
+      }
+
+      else {
+        setTimeout(function(){ heatMapPlot(PVNames, data, traceNum); }, 500);
+        console.log("checking");
+      }
+
+
+      //console.log(IMG_data_z);
+      if(PVFirstRun[PVNames][traceNum]==true){
+
+        $( "#plots" ).append( "<div id='" + plotName + "' class='plot'></div>" );
+        var plot_data = [{
+                  x: x,
+                  y: y,
+                  z: IMG_data_z,
+                  type: 'heatmap',
+                  colorscale: 'Viridis',
+                  showscale: false
+
+                }];
+
+        var layout = {
+            title: plotName,
+
+            scene:{
+            },
+            autosize: false,
+            hovermode: false,
+            width: 450,
+            height: 400,
+            margin: {t: 50}
+            // xaxis: {
+            //   ticks: ''
+            // },
+            //
+            // yaxis: {
+            //   ticks: ''
+            // }
+          };
+          PVFirstRun[PVNames][traceNum]=false;
+          Plotly.newPlot(plotName, plot_data  , layout);
+        }
+
+        else {
+
+            Plotly.restyle(plotName, 'z', [IMG_data_z]);
+
+          }
+          if (PVFrame[PVNames][traceNum]<(IMG_data_raw.length-1)) {
+            //console.log("no delete");
+
+              PVFrame[PVNames][traceNum]++;
+              setTimeout(function(){ heatMapPlot(PVNames, data, traceNum); }, 70);
+
+          }
+          else {
+            //console.log("delete one");
+            PVData[PVNames][traceNum].shift();
+
+            //PVBlockNumber[PVNames] += 1;
+            PVFrame[PVNames][traceNum]=0;
+            setTimeout(function(){ heatMapPlot(PVNames, data, traceNum); }, 70);
+
+            }
+    }
+
+    $('#tabs li a:not(:first)').addClass('inactive');
+    $('.tab_container').hide();
+    $('.tab_container:first').show();
+
+    $(document).on('click', '#tabs li a', function(){
+        var t = $(this).attr('id');
+      if($(this).hasClass('inactive')){ //this is the start of our condition
+        $('#tabs li a').addClass('inactive');
+        $(this).removeClass('inactive');
+
+        $('.container').hide();
+        $('#'+ t + 'C').fadeIn('slow');
+     }
+    });
+    function deselect(e) {
+      $('.pop').slideFadeToggle(function() {
+        e.removeClass('selected');
+      });
+    }
+    $(document).on('click', '.BLE', function(event){
+
+            if(($(this).hasClass('selected')) && ($(this).hasClass('BLE'))) {
+              deselect($(this));
+
+            }
+
+            else if($('.BLE').hasClass('selected')){
+                deselect($('.selected'));
+          }
+
+        else if($(this).hasClass('BLE')) {
+        $(this).addClass('selected');
+        PV_DISC_ELEM_INDEX = $(this).html();
+        PV_CELL = $(this).parent().parent().parent().children("span").children("strong").html();
+        PV_SECTION = $(this).parent().parent().parent().parent().parent().children("span").children("strong").html();
+
+        var PVName = PV_SECTION +"-"+ PV_CELL +":"+ PV_DISC_ELEM_INDEX;
+        //console.log(PVName);
+        var suffixes = PVParameters[PVName]["suffixes"];
+        var plotTypes = PVParameters[PVName]["plotTypes"];
+        $('#PVNames').val(PVName);
+        var items = [];
+        for (var i = 0; i < suffixes.length; i++) {
+            items.push( "<input type='radio' name='PVSuffix' id='"+suffixes[i]+"' value='"+suffixes[i]+"' /><label for='"+suffixes[i]+"'>"+suffixes[i]+"</label><br>" );
+        }
+        $("#PVSuffix").html("");
+        $("#PVSuffix").html(items.join( "" ));
+        var items = [];
+
+        for (var i = 0; i < plotTypes.length; i++) {
+            items.push( "<input type='radio' name='plotType' id='"+plotTypes[i]+"' value='"+plotTypes[i]+"' /><label for='"+plotTypes[i]+"'>"+plotTypes[i]+"</label><br>" );
+        }
+        $("#plotTypes").html("");
+        $("#plotTypes").html(items.join( "" ));
+
+        $('.pop').css({ top: event.pageY, left:  event.pageX}).slideFadeToggle();
+        }
+        $('#tabs li a:not(:first)').addClass('inactive');
+        $('#tabs li a:first').removeClass('inactive');
+
+        $('.container').hide();
+        $('.container:first').show();
+    return false;
+    });
+
+    $.fn.slideFadeToggle = function(easing, callback) {
+      return this.animate({ opacity: 'toggle', height: 'toggle' }, 'fast', easing, callback);
+    };
+
+
+});
+    </script>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="messagepop pop">
+          <form method="post" id="new_message" action="/messages" style="font-size:12px;">
+                      <ul id="tabs">
+            <li><a id="tab1">DrawPV</a></li>
+
+              </ul>
+      		<div class="tab_container" id="tab1C">
+            <form class="" id="getPVForm" >
+              <div id="formText">
+              <label for="PVNames">PV Name: </label><input type="textarea" id="PVNames" name="PVnames" class="form-control" required autofocus><br>
+              <label for="fromWhen">Start: </label><input type="textarea" id="fromWhen" name="fromWhen" class="form-control" placeholder="YYYY-MM-DD H:M:S"><br>
+              <label for="untilWhen">End: </label><input type="textarea" id="untilWhen" name="untilWhen" class="form-control" placeholder="YYYY-MM-DD H:M:S"><br>
+              <label for="resolution">Resolution: </label><input type="textarea" id="resolution" name="resolution" class="form-control" placeholder="">
+
+            </div><fieldset class="checkBoxGroup">
+                <ul class="radiobutton" id="PVSuffix">
+                </ul>
+              </fieldset>
+              <fieldset class="radiobuttonGroup">
+                <ul class="radiobutton" id="plotTypes">
+                </ul>
+              </fieldset>
+              <script>
+
+              //Draw the selected PV's different available options (ie: xpos, ypos)
+
+
+              </script>
+
+              <button class="getPVbutton btn" type="button">Get PVs</button>
+
+            </form>
+
+
+          </div>
+              <div class="tab_container" id="tab2C">first</div>
+
+
+          </form>
+      </div>
+      <div class="sidebar left"><div id="PVs"><pre> ESS BLE Tree</pre>
+</div>
+</div>
+
+      <div id="plots"><!-- Plotly chart will be drawn inside this DIV --></div>
+</div> <!-- /container -->
+  </body>
+</html>
